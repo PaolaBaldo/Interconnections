@@ -1,0 +1,86 @@
+package com.ryanair.ryanairflights.routes;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.Data;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+public class Route {
+	private String airportFrom;
+	private String airportTo;
+	private String connectingAirport = null;
+	private boolean newRoute;
+	private boolean seasonalRoute;
+	private String operator;
+	private String group;
+
+	// Getter Methods
+
+	public String getAirportFrom() {
+		return airportFrom;
+	}
+
+	public String getAirportTo() {
+		return airportTo;
+	}
+
+	public String getConnectingAirport() {
+		return connectingAirport;
+	}
+
+	public boolean getNewRoute() {
+		return newRoute;
+	}
+
+	public boolean getSeasonalRoute() {
+		return seasonalRoute;
+	}
+
+	public String getOperator() {
+		return operator;
+	}
+
+	public String getGroup() {
+		return group;
+	}
+
+	// Setter Methods
+
+	public void setAirportFrom(String airportFrom) {
+		this.airportFrom = airportFrom;
+	}
+
+	public void setAirportTo(String airportTo) {
+		this.airportTo = airportTo;
+	}
+
+	public void setConnectingAirport(String connectingAirport) {
+		this.connectingAirport = connectingAirport;
+	}
+
+	public void setNewRoute(boolean newRoute) {
+		this.newRoute = newRoute;
+	}
+
+	public void setSeasonalRoute(boolean seasonalRoute) {
+		this.seasonalRoute = seasonalRoute;
+	}
+
+	public void setOperator(String operator) {
+		this.operator = operator;
+	}
+
+	public void setGroup(String group) {
+		this.group = group;
+	}
+
+	@Override
+	public String toString() {
+		return "Route [airportFrom=" + airportFrom + ", airportTo=" + airportTo + ", connectingAirport="
+				+ connectingAirport + ", newRoute=" + newRoute + ", seasonalRoute=" + seasonalRoute + ", operator="
+				+ operator + ", group=" + group + "]";
+	}
+	
+	
+}
