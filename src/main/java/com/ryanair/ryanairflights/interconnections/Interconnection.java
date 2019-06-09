@@ -8,9 +8,8 @@ import lombok.Setter;
 
 public class Interconnection
 {
-	private ArrayList<Leg> legs;
-
 	private String stops;
+	private ArrayList<Leg> legs;
 
 	public ArrayList<Leg> getLegs() {
 		return legs;

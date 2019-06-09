@@ -13,5 +13,11 @@ public class ScheduleService {
 		return this.restTemplate.getForObject("https://services-api.ryanair.com/timtbl/3/schedules/{departure}/{arrival}/years/{year}/months/{month}", Schedule.class, 
 				departure, arrival, year, month);
 	}
+	
+public Schedule findSchedule(String departure, String arrival, int year, int month) {
+		
+		return this.restTemplate.getForObject("https://services-api.ryanair.com/timtbl/3/schedules/{departure}/{arrival}/years/{year}/months/{month}", Schedule.class, 
+				departure, arrival, year, month);
+	}
 
 }
