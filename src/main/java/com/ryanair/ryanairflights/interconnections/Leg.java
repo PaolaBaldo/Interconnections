@@ -5,13 +5,15 @@ import lombok.Data;
 @Data
 public class Leg
 {
+    
     private String departureAirport;
 
     private String departureDateTime;
-
+    
     private String arrivalDateTime;
 
     private String arrivalAirport;
+
 
 	public String getDepartureAirport() {
 		return departureAirport;

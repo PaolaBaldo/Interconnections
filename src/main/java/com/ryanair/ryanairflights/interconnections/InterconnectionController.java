@@ -36,6 +36,9 @@ public class InterconnectionController {
 	@Autowired
 	private ScheduleService scheduleService;
 	
+	int month;
+	int years;
+	
 	/*http://localhost:8080/somevalidcontext/interconnections?departure=DUB&arrival=WRO&departureDateTime=2019-07-01T07:00&arrivalDateTime=2019-07-03T21:00*/
 		
 	@RequestMapping(value = "/somevalidcontext/interconnections", method = RequestMethod.GET)
@@ -43,49 +46,57 @@ public class InterconnectionController {
 			@RequestParam String arrival,
 			@RequestParam("departureDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime requestedDepartureDateTime,
 			@RequestParam("arrivalDateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime requestedArrivalDateTime) {
+		int month;
+		int year;
+		if(requestedDepartureDateTime.getMonthValue()==requestedArrivalDateTime.getMonthValue()) {
+			month = requestedDepartureDateTime.getMonthValue();
+		}
 
 		List<Interconnection> interconnections = new ArrayList<Interconnection>();
 		List<Route> routes = routeService.findAllRoutes();
 		routes = routeService.findRoutesByconnectingAirportAndOperator(routes);
 		List<Route> routesByDepartureAndArrival = routeService.findRoutesByDepartureAndArrival(routes, departure, arrival);
 		List<Route> routesByDeparture = routeService.findRoutesByDeparture(routes, departure);
-		List<Route> routesByArrival = routeService.findRoutesByDeparture(routes, arrival);
-		
+		List<Route> routesByArrival = routeService.findRoutesByArrival(routes, arrival);
+		List<Route> interconnecteds = new ArrayList();
+		List<Interconnection> interconnections_oneStop = new ArrayList();
 		//////////
 		for(Route route1 : routesByDeparture) {
 			for(Route route2 : routesByArrival) {
-				if(route1.getAirportTo().equals(route2.getAirportFrom())) {
-					Schedule route1Schedule = scheduleService.findSchedule(route1.getAirportFrom(), route1.getAirportTo(), 
-							requestedDepartureDateTime.getYear(), requestedDepartureDateTime.getMonthValue());
+				if(route1.getAirportTo().equals(route2.getAirportFrom()) && !route1.getAirportTo().equals(arrival)) {
+					Interconnection interconnection = new Interconnection();
+					Leg leg1 = new Leg();
+					leg1.setDepartureAirport(route1.getAirportFrom());
+					leg1.setArrivalAirport(route1.getAirportTo());
+					Leg leg2 = new Leg();
+					leg2.setDepartureAirport(route2.getAirportFrom());
+					leg2.setArrivalAirport(route2.getAirportTo());
+					ArrayList<Leg> legs = new ArrayList();
+					legs.add(leg1);
+					legs.add(leg2);
+					interconnection.setLegs(legs);
+					interconnections_oneStop.add(interconnection);
+					List<Flight> flights = getFlights(interconnections_oneStop, requestedArrivalDateTime);
+					if(flights != null) {
+						flights.get(0).getArrivalTime();
+					}
 					
-					Schedule route2Schedule = scheduleService.findSchedule(route2.getAirportFrom(), route2.getAirportTo(), 
-							requestedDepartureDateTime.getYear(), requestedDepartureDateTime.getMonthValue());
 					
-
 				}
 			}
 		}
 		
 		
 		
-		///////////////////
-		Schedule schedule = scheduleService.findScheduleNoStops(departure, arrival, requestedDepartureDateTime.getYear(), requestedDepartureDateTime.getMonthValue());	
-		List<Day> days = Arrays.asList(schedule.getDays());
 		
-		Day day = days.stream()                        
-                .filter(x -> String.valueOf(requestedDepartureDateTime.getDayOfMonth()).equals(x.getDay()))        
-                .findAny()                                     
-                .orElse(null); 
+		/////////////////// one stop
+		Schedule schedule = scheduleService.findScheduleNoStops(departure, arrival, requestedDepartureDateTime.getYear(), requestedDepartureDateTime.getMonthValue());
 		
-		List<Flight> flights = null;
-		if(day != null) {
-			flights = Arrays.asList(day.getFlights());
-		}
-		else {
-			throw new FlightNotFoundException("No flights found");
-		}
+		Day day = findDayinSchedule(schedule, requestedDepartureDateTime);
 		
+		List<Flight> flights = verifyFlights(day);
 		
+	
 		
 		for(Flight flight : flights) {
 	
@@ -121,6 +132,58 @@ public class InterconnectionController {
 			}
 		}
 		return interconnections;
+	}/////one stop
+	
+	
+	public List<Flight> getFlights (List<Interconnection> interconnections_oneStop,  LocalDateTime requestedDepartureDateTime) {
+		for(Interconnection interconnection : interconnections_oneStop ) {
+			for(Leg leg : interconnection.getLegs()) {
+				Schedule schedule = scheduleService.findSchedule(leg.getDepartureAirport(), leg.getArrivalAirport(), requestedDepartureDateTime.getYear(), requestedDepartureDateTime.getMonthValue());
+				Day day = findDayinSchedule(schedule, requestedDepartureDateTime);
+				return Arrays.asList(day.getFlights());
+			}
+		}
+		return null;
+	}
+	
+	
+	/*private void verifySecondLeg(Route route2, LocalDateTime requestedDepartureDateTime) {
+		Schedule route2Schedule = scheduleService.findSchedule(route2.getAirportFrom(), route2.getAirportTo(), 
+				requestedDepartureDateTime.getYear(), requestedDepartureDateTime.getMonthValue());
+		
+		Day day = findDayinSchedule(route2Schedule, requestedDepartureDateTime);
+		List<Flight> flights = verifyFlights(day);
+		for(Flight flight : flights) {
+			LocalTime flightDepartureTime = LocalTime.parse(flight.getDepartureTime());
+			if(flightDepartureTime.isAfter(requestedDepartureDateTime.toLocalTime())) {
+				this.verifySecondLeg(route2, requestedDepartureDateTime);
+				
+			}
+			LocalTime flightArrivalTime = LocalTime.parse(flight.getArrivalTime());
+		}
+		
+		
+		
+	}*/
+
+
+	public Day findDayinSchedule(Schedule schedule, LocalDateTime requestedDepartureDateTime) {
+		List<Day> days = Arrays.asList(schedule.getDays());
+		Day day = days.stream()
+				.filter(x -> String.valueOf(requestedDepartureDateTime.getDayOfMonth()).equals(x.getDay())).findAny()
+				.orElse(null);
+		return day;
+	}
+	
+	public List<Flight> verifyFlights(Day day) {
+		List<Flight> flightsList = null;
+		if(day != null) {
+			flightsList = Arrays.asList(day.getFlights());
+		}
+		else {
+			throw new FlightNotFoundException("No flights found");
+		}
+		return flightsList;
 	}
 
 }
