@@ -13,7 +13,14 @@ public class Leg
     private String arrivalDateTime;
 
     private String arrivalAirport;
+    
+    
 
+
+	public Leg() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
 
 	public String getDepartureAirport() {
 		return departureAirport;
