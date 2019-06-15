@@ -15,12 +15,24 @@ public class Leg
     private String arrivalAirport;
     
     
+    
+
+
+	public Leg(String departureAirport, String arrivalAirport, String departureDateTime, String arrivalDateTime) {
+		super();
+		this.departureAirport = departureAirport;
+		this.departureDateTime = departureDateTime;
+		this.arrivalDateTime = arrivalDateTime;
+		this.arrivalAirport = arrivalAirport;
+	}
+
 
 
 	public Leg() {
-		super();
 		// TODO Auto-generated constructor stub
 	}
+
+
 
 	public String getDepartureAirport() {
 		return departureAirport;
