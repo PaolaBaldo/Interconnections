@@ -7,18 +7,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import com.ryanair.ryanairflights.routes.Route;
 import com.ryanair.ryanairflights.routes.RouteService;
@@ -62,13 +58,33 @@ public class InterconnectionController {
 		List<Route> routesByDeparture = routeService.findRoutesByDeparture(routes, departure);
 		List<Route> routesByArrival = routeService.findRoutesByArrival(routes, arrival);
 	
-	;
-		//////////
+		/////direct routes
+		List<Route> directRoutes = routeService.findRoutesByDepartureAndArrival(routes, departure, arrival);
+		Schedule routeSchedule = scheduleService.findSchedule(departure,arrival, year, month);
+
+		List<Leg> directLegs = createLegList(directRoutes.get(0), routeSchedule, requestedDepartureDateTime,
+				requestedArrivalDateTime);
+		for(Leg leg : directLegs) {
+			LocalDateTime legDepartureDateTime = LocalDateTime.parse(leg.getDepartureDateTime());
+			LocalDateTime legArrivalDateTime = LocalDateTime.parse(leg.getArrivalDateTime());
+				if(legDepartureDateTime.isAfter(requestedDepartureDateTime) && legArrivalDateTime.isBefore(requestedArrivalDateTime)) {
+						ArrayList<Leg> legs = new ArrayList<Leg>();
+						legs.add(leg);
+						Interconnection interconnectedFlight = new Interconnection();
+						interconnectedFlight.setLegs(legs);
+						interconnectedFlight.setStops("0");
+						interconnections.add(interconnectedFlight);
+				}
+		}
+		
+		
+	
+		//////////end direct routes
+		
 		for (Route route1 : routesByDeparture) {
 			for (Route route2 : routesByArrival) {
 				if (route1.getAirportTo().equals(route2.getAirportFrom()) && !route1.getAirportTo().equals(arrival)) {
-					Interconnection interconnection = new Interconnection();
-					
+				
 					Schedule firtsRouteSchedule = scheduleService.findSchedule(route1.getAirportFrom(),route1.getAirportTo(), year, month);
 					
 					Schedule secondRouteSchedule = scheduleService.findSchedule(route2.getAirportFrom(),route2.getAirportTo(), year, month);
@@ -95,88 +111,58 @@ public class InterconnectionController {
 										legs.add(leg1);
 										legs.add(leg2);
 
-										Interconnection interconnetion = new Interconnection();
-										interconnetion.setLegs(legs);
-										interconnections.add(interconnetion);
+										Interconnection interconnectedFlight = new Interconnection();
+										interconnectedFlight.setLegs(legs);
+										interconnectedFlight.setStops("1");
+										interconnections.add(interconnectedFlight);
 									}
 								}
 							}
 						}
 					}
-					
-
-
-					// List<Leg> firstRouteLegs = createLegList(route1, firtsRouteSchedule,
-					// requestedDepartureDateTime, requestedArrivalDateTime);
-					// List<Leg> secondRouteLegs = createLegList(route2, secondRouteSchedule,
-					// requestedDepartureDateTime, requestedArrivalDateTime);
-
-					// interconnections_oneStop.add(interconnection);
 				}
 			}
 		}
 
 		/////////////////// no stop
-		/*
-		 * Schedule schedule = scheduleService.findScheduleNoStops(departure, arrival,
-		 * requestedDepartureDateTime.getYear(),
-		 * requestedDepartureDateTime.getMonthValue()); List<Flight> flights =
-		 * findFlightsBetweenDates(schedule, requestedArrivalDateTime,
-		 * requestedArrivalDateTime);
-		 * 
-		 * for(Flight flight : flights) {
-		 * 
-		 * 
-		 * LocalTime flightDepartureTime = LocalTime.parse(flight.getDepartureTime());
-		 * LocalTime flightArrivalTime = LocalTime.parse(flight.getArrivalTime());
-		 * 
-		 * 
-		 * if(flightDepartureTime.isAfter(requestedDepartureDateTime.toLocalTime())) {
-		 * if(flightArrivalTime.isBefore(requestedArrivalDateTime.toLocalTime())) {
-		 * 
-		 * 
-		 * LocalDateTime flightDepartureDateTime =
-		 * LocalDateTime.of(requestedDepartureDateTime.getYear(),
-		 * requestedDepartureDateTime.getMonth(), Integer.valueOf(day.getDay()),
-		 * flightDepartureTime.getHour(), flightDepartureTime.getMinute());
-		 * 
-		 * LocalDateTime flightArrivalDateTime =
-		 * LocalDateTime.of(requestedArrivalDateTime.getYear(),
-		 * requestedArrivalDateTime.getMonth(), Integer.valueOf(day.getDay()),
-		 * flightArrivalTime.getHour(), flightArrivalTime.getMinute());
-		 * 
-		 * Interconnection interconnection = new Interconnection();
-		 * interconnection.setStops("0"); Leg leg = new Leg();
-		 * leg.setDepartureAirport(departure); leg.setArrivalAirport(arrival);
-		 * leg.setDepartureDateTime(flightDepartureDateTime.toString());
-		 * leg.setArrivalDateTime(flightArrivalDateTime.toString()); ArrayList<Leg> legs
-		 * = new ArrayList<Leg>(); legs.add(leg); interconnection.setLegs(legs);
-		 * interconnections.add(interconnection); } } }
-		 */
-		return interconnections;
-	}/////0 stop
-	
 
-
-	
-	/*private void verifySecondLeg(Route route2, LocalDateTime requestedDepartureDateTime) {
-		Schedule route2Schedule = scheduleService.findSchedule(route2.getAirportFrom(), route2.getAirportTo(), 
+		/*Schedule schedule = scheduleService.findScheduleNoStops(departure, arrival,
 				requestedDepartureDateTime.getYear(), requestedDepartureDateTime.getMonthValue());
-		
-		Day day = findDayinSchedule(route2Schedule, requestedDepartureDateTime);
-		List<Flight> flights = verifyFlights(day);
-		for(Flight flight : flights) {
+		List<Flight> flights = findFlightsBetweenDates(schedule, requestedArrivalDateTime, requestedArrivalDateTime);
+
+		for (Flight flight : flights) {
+
 			LocalTime flightDepartureTime = LocalTime.parse(flight.getDepartureTime());
-			if(flightDepartureTime.isAfter(requestedDepartureDateTime.toLocalTime())) {
-				this.verifySecondLeg(route2, requestedDepartureDateTime);
-				
-			}
 			LocalTime flightArrivalTime = LocalTime.parse(flight.getArrivalTime());
-		}
-		
-		
-		
-	}*/
+
+			if (flightDepartureTime.isAfter(requestedDepartureDateTime.toLocalTime())) {
+				if (flightArrivalTime.isBefore(requestedArrivalDateTime.toLocalTime())) {
+
+					LocalDateTime flightDepartureDateTime = LocalDateTime.of(requestedDepartureDateTime.getYear(),
+							requestedDepartureDateTime.getMonth(), Integer.valueOf(day.getDay()),
+							flightDepartureTime.getHour(), flightDepartureTime.getMinute());
+
+					LocalDateTime flightArrivalDateTime = LocalDateTime.of(requestedArrivalDateTime.getYear(),
+							requestedArrivalDateTime.getMonth(), Integer.valueOf(day.getDay()),
+							flightArrivalTime.getHour(), flightArrivalTime.getMinute());
+
+					Interconnection interconnection = new Interconnection();
+					interconnection.setStops("0");
+					Leg leg = new Leg();
+					leg.setDepartureAirport(departure);
+					leg.setArrivalAirport(arrival);
+					leg.setDepartureDateTime(flightDepartureDateTime.toString());
+					leg.setArrivalDateTime(flightArrivalDateTime.toString());
+					ArrayList<Leg> legs = new ArrayList<Leg>();
+					legs.add(leg);
+					interconnection.setLegs(legs);
+					interconnections.add(interconnection);
+				}
+			}
+		}*/
+
+		return interconnections;
+	}///// 0 stop
 
 
 	private List<Leg> createLegList(Route route, Schedule schedule, LocalDateTime requestedDepartureDateTime,
