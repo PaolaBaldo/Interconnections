@@ -25,8 +25,8 @@ public class RouteService {
 		return Arrays.asList(list);
 	}
 
-	public List<Route> findRoutesByconnectingAirportAndOperator(List<Route> routes) {
-		return routes.stream()
+	public List<Route> findRoutesByConnectingAirportAndOperator() {
+		return this.findAllRoutes().stream()
                 .filter(d -> d.getOperator().equals("RYANAIR") && d.getConnectingAirport() == null)
                 .collect(Collectors.toList());
 	}

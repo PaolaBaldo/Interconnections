@@ -1,4 +1,4 @@
-package com.ryanair.ryanairflights.interconnections;
+package com.ryanair.ryanairflights.interconnections.leg;
 
 import lombok.Data;
 
