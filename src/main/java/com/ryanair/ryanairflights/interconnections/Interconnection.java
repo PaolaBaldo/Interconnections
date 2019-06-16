@@ -1,29 +1,22 @@
 package com.ryanair.ryanairflights.interconnections;
-import java.util.List;
 
-import com.ryanair.ryanairflights.interconnections.leg.Leg;
-
+import java.util.ArrayList;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 public class Interconnection
 {
-
 	private String stops;
-	private List<Leg> legs;
-	
+	private ArrayList<Leg> legs;
 
-	public Interconnection(String stops, List<Leg> legs) {
-		super();
-		this.stops = stops;
-		this.legs = legs;
-	}
-
-	public List<Leg> getLegs() {
+	public ArrayList<Leg> getLegs() {
 		return legs;
 	}
 
-	public void setLegs(List<Leg> legs2) {
-		this.legs = legs2;
+	public void setLegs(ArrayList<Leg> legs) {
+		this.legs = legs;
 	}
 
 	public String getStops() {
