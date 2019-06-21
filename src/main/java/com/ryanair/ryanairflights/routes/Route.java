@@ -1,12 +1,19 @@
 package com.ryanair.ryanairflights.routes;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Data;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@Entity
 public class Route {
+	
+	private @Id @GeneratedValue Long id;
 	private String airportFrom;
 	private String airportTo;
 	private String connectingAirport = null;

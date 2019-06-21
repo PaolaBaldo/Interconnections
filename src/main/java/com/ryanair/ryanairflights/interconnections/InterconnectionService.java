@@ -56,17 +56,18 @@ public class InterconnectionService {
 		/////direct routes
 		List<Route> directRoutes = routeService.findRoutesByDepartureAndArrival(this.routes, departure, arrival);
 		Schedule routeSchedule = scheduleService.findSchedule(departure,arrival, this.year, this.month);
-
-		List<Leg> directLegs = legService.createLegList(directRoutes.get(0), routeSchedule, requestedDepartureDateTime, requestedArrivalDateTime, year, month);
-		for(Leg leg : directLegs) {
-			LocalDateTime legDepartureDateTime = LocalDateTime.parse(leg.getDepartureDateTime());
-			LocalDateTime legArrivalDateTime = LocalDateTime.parse(leg.getArrivalDateTime());
-				if(legDepartureDateTime.isAfter(requestedDepartureDateTime) && legArrivalDateTime.isBefore(requestedArrivalDateTime)) {
-						ArrayList<Leg> legs = new ArrayList<Leg>();
-						legs.add(leg);
-						Interconnection interconnectedFlight = new Interconnection("0", legs);
-						this.interconnections.add(interconnectedFlight);
-				}
+		if(directRoutes != null && !directRoutes.isEmpty()) {
+			List<Leg> directLegs = legService.createLegList(directRoutes.get(0), routeSchedule, requestedDepartureDateTime, requestedArrivalDateTime, year, month);
+			for(Leg leg : directLegs) {
+				LocalDateTime legDepartureDateTime = LocalDateTime.parse(leg.getDepartureDateTime());
+				LocalDateTime legArrivalDateTime = LocalDateTime.parse(leg.getArrivalDateTime());
+					if(legDepartureDateTime.isAfter(requestedDepartureDateTime) && legArrivalDateTime.isBefore(requestedArrivalDateTime)) {
+							ArrayList<Leg> legs = new ArrayList<Leg>();
+							legs.add(leg);
+							Interconnection interconnectedFlight = new Interconnection("0", legs);
+							this.interconnections.add(interconnectedFlight);
+					}
+			}
 		}
 		
 		//////////end direct routes
@@ -89,7 +90,7 @@ public class InterconnectionService {
 	
 	public Interconnection findInterconnectedFlight(List<Route> routesByDeparture, List<Route> routesByArrival, String arrivalAirport) {
 		
-		RouteCombo routeCombo = routesCombinerService.combineRoutes(routesByDeparture, routesByArrival, arrivalAirport, year, month, requestedArrivalDateTime, requestedArrivalDateTime );
+		RouteCombo routeCombo = routesCombinerService.combineRoutes(routesByDeparture, routesByArrival, arrivalAirport, year, month, requestedDepartureDateTime, requestedArrivalDateTime );
 		Interconnection interconnection = legsCombinerService.combineLegs(routeCombo, requestedArrivalDateTime, requestedArrivalDateTime);
 
 		return interconnection;
