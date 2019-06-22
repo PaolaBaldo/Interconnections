@@ -20,7 +20,7 @@ public class Route {
 	private boolean newRoute;
 	private boolean seasonalRoute;
 	private String operator;
-	private String group;
+
 
 	// Getter Methods
 
@@ -48,9 +48,6 @@ public class Route {
 		return operator;
 	}
 
-	public String getGroup() {
-		return group;
-	}
 
 	// Setter Methods
 
@@ -78,16 +75,6 @@ public class Route {
 		this.operator = operator;
 	}
 
-	public void setGroup(String group) {
-		this.group = group;
-	}
 
-	@Override
-	public String toString() {
-		return "Route [airportFrom=" + airportFrom + ", airportTo=" + airportTo + ", connectingAirport="
-				+ connectingAirport + ", newRoute=" + newRoute + ", seasonalRoute=" + seasonalRoute + ", operator="
-				+ operator + ", group=" + group + "]";
-	}
-	
 	
 }
