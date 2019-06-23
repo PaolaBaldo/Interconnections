@@ -16,14 +16,15 @@ import org.springframework.web.client.RestTemplate;
 public class RouteService {
 	
 	RestTemplate restTemplate = new RestTemplate();
-
-	public List<Route> findAllRoutes() {
+	
+	public List<Route> callRoutesAPI() {
 		ResponseEntity<Route[]> responseEntity = restTemplate.getForEntity("https://services-api.ryanair.com/locate/3/routes", Route[].class);
 		Route[] list = responseEntity.getBody();
 		MediaType contentType = responseEntity.getHeaders().getContentType();
 		HttpStatus statusCode = responseEntity.getStatusCode();
 		return Arrays.asList(list);
 	}
+	
 
 	public List<Route> findRoutesByconnectingAirportAndOperator(List<Route> routes) {
 		return routes.stream()

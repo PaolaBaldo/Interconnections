@@ -1,19 +1,23 @@
 package com.ryanair.ryanairflights.routes;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 
 import lombok.Data;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@Entity
 public class Route {
+	
+	private @Id @GeneratedValue Long id;
 	private String airportFrom;
 	private String airportTo;
 	private String connectingAirport = null;
 	private boolean newRoute;
 	private boolean seasonalRoute;
 	private String operator;
-	private String group;
 
 	// Getter Methods
 
@@ -41,9 +45,6 @@ public class Route {
 		return operator;
 	}
 
-	public String getGroup() {
-		return group;
-	}
 
 	// Setter Methods
 
@@ -71,16 +72,6 @@ public class Route {
 		this.operator = operator;
 	}
 
-	public void setGroup(String group) {
-		this.group = group;
-	}
-
-	@Override
-	public String toString() {
-		return "Route [airportFrom=" + airportFrom + ", airportTo=" + airportTo + ", connectingAirport="
-				+ connectingAirport + ", newRoute=" + newRoute + ", seasonalRoute=" + seasonalRoute + ", operator="
-				+ operator + ", group=" + group + "]";
-	}
 	
 	
 }
