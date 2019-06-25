@@ -81,19 +81,19 @@ public class InterconnectionService {
 	public List<Interconnection> findInterconnectedFlights(List<Route> routes, String departure, String arrivalAirport){
 		List<Route> routesByDeparture = routeService.findRoutesByDeparture(routes, departure);
 		List<Route> routesByArrival = routeService.findRoutesByArrival(routes, arrivalAirport);
-		
-		Interconnection interconnection = this.findInterconnectedFlight(routesByDeparture, routesByArrival,  arrivalAirport);
-		this.interconnections.add(interconnection);
-		
+		List<Interconnection> interconnectionList = this.findInterconnectedFlight(routesByDeparture, routesByArrival,  arrivalAirport);
+		this.interconnections.addAll(interconnectionList);
 		return this.interconnections;
 	}
 	
-	public Interconnection findInterconnectedFlight(List<Route> routesByDeparture, List<Route> routesByArrival, String arrivalAirport) {
+	public List<Interconnection> findInterconnectedFlight(List<Route> routesByDeparture, List<Route> routesByArrival, String arrivalAirport) {
 		
-		RouteCombo routeCombo = routesCombinerService.combineRoutes(routesByDeparture, routesByArrival, arrivalAirport, year, month, requestedDepartureDateTime, requestedArrivalDateTime );
-		Interconnection interconnection = legsCombinerService.combineLegs(routeCombo, requestedArrivalDateTime, requestedArrivalDateTime);
-
-		return interconnection;
+		List<RouteCombo> routeComboList = routesCombinerService.combineRoutes(routesByDeparture, routesByArrival, arrivalAirport, year, month, requestedDepartureDateTime, requestedArrivalDateTime );
+		for(RouteCombo routeCombo : routeComboList) {
+			Interconnection interconnection = legsCombinerService.combineLegs(routeCombo, requestedArrivalDateTime, requestedArrivalDateTime);
+			interconnections.add(interconnection);
+		}
+		return interconnections;
 	}
 	
 	
