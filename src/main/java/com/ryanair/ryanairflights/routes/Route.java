@@ -20,7 +20,6 @@ public class Route {
 	private boolean newRoute;
 	private boolean seasonalRoute;
 	private String operator;
-	
 
 	// Getter Methods
 
@@ -73,8 +72,6 @@ public class Route {
 	public void setOperator(String operator) {
 		this.operator = operator;
 	}
-
-	
-	
+		
 	
 }
