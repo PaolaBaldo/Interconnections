@@ -1,11 +1,8 @@
 package com.ryanair.ryanairflights.routes;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -15,13 +12,12 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class RouteService {
 	
+	private static final String RYANAIR_ROUTES_API = "https://services-api.ryanair.com/locate/3/routes";
 	RestTemplate restTemplate = new RestTemplate();
 	
 	public List<Route> callRoutesAPI() {
-		ResponseEntity<Route[]> responseEntity = restTemplate.getForEntity("https://services-api.ryanair.com/locate/3/routes", Route[].class);
+		ResponseEntity<Route[]> responseEntity = restTemplate.getForEntity(RYANAIR_ROUTES_API, Route[].class);
 		Route[] list = responseEntity.getBody();
-		MediaType contentType = responseEntity.getHeaders().getContentType();
-		HttpStatus statusCode = responseEntity.getStatusCode();
 		return Arrays.asList(list);
 	}
 	
