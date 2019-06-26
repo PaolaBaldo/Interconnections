@@ -11,9 +11,6 @@ public class RequestedFlight {
 	private LocalDateTime requestedDepartureDateTime;
 	private LocalDateTime requestedArrivalDateTime;
 	
-	
-
-	
 
 	public RequestedFlight(String departure, String arrival, int month, int year,
 			LocalDateTime requestedDepartureDateTime, LocalDateTime requestedArrivalDateTime) {

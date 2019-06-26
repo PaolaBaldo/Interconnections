@@ -1,7 +1,6 @@
 package com.ryanair.ryanairflights.interconnections.services;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +18,21 @@ import com.ryanair.ryanairflights.schedule.ScheduleService;
 @Service
 public class InterconnectionService {
 	
+	private static final String ONE_STOP = "1";
+
+	private static final String NON_STOP = "0";
+
 	@Autowired
 	private ScheduleService scheduleService;
 	
 	@Autowired
+	private LegsScheduleValidator legsScheduleValidator;
+	
+	@Autowired
 	private LegService legService;
+	
+	@Autowired
+	private LegsCombiner legsCombiner;
 	
 	private final RouteRepository routeRepository;
 
@@ -44,20 +53,8 @@ public class InterconnectionService {
 		List<Route> routesByDeparture = routeRepository.findAllByAirportFrom(departure);
 		List<Route> routesByArrival = routeRepository.findAllByAirportTo(arrival);
 	
-		/////direct routes
-		List<Route> directRoutes = routeRepository.findAllByAirportFromAndAirportTo(departure, arrival);
-		Schedule routeSchedule = scheduleService.findSchedule(departure,arrival, requestedFlight);
-		if(directRoutes != null && !directRoutes.isEmpty()) {
-			List<Leg> directLegs = legService.createLegList(directRoutes.get(0), routeSchedule, requestedFlight);
-			for(Leg leg : directLegs) {
-				if(validateLegSchedule(requestedDepartureDateTime, requestedArrivalDateTime, interconnections, leg)) {
-					createDirectInterconnection(interconnections, leg);
-				};
-			}	
-		}
-
-	
-		//////////end direct routes
+		findNonConnectingFlights(departure, arrival, requestedDepartureDateTime, requestedArrivalDateTime,
+				interconnections);
 		
 		for (Route firstLegRoute : routesByDeparture) {
 			for (Route secondLegRoute : routesByArrival) {
@@ -70,26 +67,31 @@ public class InterconnectionService {
 		return interconnections;
 		
 	}
+
+	private void findNonConnectingFlights(String departure, String arrival, LocalDateTime requestedDepartureDateTime,
+			LocalDateTime requestedArrivalDateTime, List<Interconnection> interconnections) {
+		
+		List<Route> directRoutes = routeRepository.findAllByAirportFromAndAirportTo(departure, arrival);
+		Schedule routeSchedule = scheduleService.findSchedule(departure,arrival, requestedFlight);
+		if(directRoutes != null && !directRoutes.isEmpty()) {
+			List<Leg> directLegs = legService.createLegList(directRoutes.get(0), routeSchedule, requestedFlight);
+			for(Leg leg : directLegs) {
+				if(legsScheduleValidator.validateLegSchedule(requestedDepartureDateTime, requestedArrivalDateTime, interconnections, leg)) {
+					createDirectInterconnection(interconnections, leg);
+				};
+			}	
+		}
+	}
 	
 	private void createDirectInterconnection(List<Interconnection> interconnections, Leg leg) {
 		ArrayList<Leg> legs = new ArrayList<Leg>();
 		legs.add(leg);
 		Interconnection interconnectedFlight = new Interconnection();
 		interconnectedFlight.setLegs(legs);
-		interconnectedFlight.setStops("0");
+		interconnectedFlight.setStops(NON_STOP);
 		interconnections.add(interconnectedFlight);
 	}
 
-
-	private Boolean validateLegSchedule(LocalDateTime requestedDepartureDateTime, LocalDateTime requestedArrivalDateTime,
-			List<Interconnection> interconnections, Leg leg) {
-		LocalDateTime legDepartureDateTime = LocalDateTime.parse(leg.getDepartureDateTime());
-		LocalDateTime legArrivalDateTime = LocalDateTime.parse(leg.getArrivalDateTime());
-			if(legDepartureDateTime.isAfter(requestedDepartureDateTime) && legArrivalDateTime.isBefore(requestedArrivalDateTime)) {
-					return true;
-			}
-			return false;
-	}
 
 
 	private void createInterconnetion(LocalDateTime requestedDepartureDateTime, LocalDateTime requestedArrivalDateTime, 
@@ -102,53 +104,19 @@ public class InterconnectionService {
 		List<Leg> possibleFirstLegs = legService.createLegList(firstLegRoute, firstLegRouteSchedule, requestedFlight);
 		List<Leg> possibleSecondLegs = legService.createLegList(secondLegRoute, secondLegRouteSchedule, requestedFlight);
 		
-		combineLegs(requestedDepartureDateTime, requestedArrivalDateTime, interconnections, possibleFirstLegs, possibleSecondLegs);
+		legsCombiner.combineLegs(requestedDepartureDateTime, requestedArrivalDateTime, interconnections, possibleFirstLegs, possibleSecondLegs);
 	}
 
 
-	private void combineLegs(LocalDateTime requestedDepartureDateTime, LocalDateTime requestedArrivalDateTime,
-			List<Interconnection> interconnections, List<Leg> possibleFirstLegs, List<Leg> possibleSecondLegs) {
-		for(Leg firstLeg : possibleFirstLegs) {
-			for(Leg secondLeg : possibleSecondLegs) {
-				
-				LocalDateTime firstLegDepartureDateTime = LocalDateTime.parse(firstLeg.getDepartureDateTime());
-				LocalDateTime firstLegArrivalDateTime = LocalDateTime.parse(firstLeg.getArrivalDateTime());
-				
-				LocalDateTime secondLegDepartureDateTime = LocalDateTime.parse(secondLeg.getDepartureDateTime());
-				LocalDateTime secondLegArrivalDateTime = LocalDateTime.parse(secondLeg.getArrivalDateTime());
-				
-				validateTimeBetweenLegs(requestedDepartureDateTime, requestedArrivalDateTime, interconnections,
-						firstLeg, secondLeg, firstLegDepartureDateTime, firstLegArrivalDateTime,
-						secondLegDepartureDateTime, secondLegArrivalDateTime);
-			}
-		}
-	}
 
-
-	private void validateTimeBetweenLegs(LocalDateTime requestedDepartureDateTime,
-			LocalDateTime requestedArrivalDateTime, List<Interconnection> interconnections, Leg firstLeg, Leg secondLeg,
-			LocalDateTime firstLegDepartureDateTime, LocalDateTime firstLegArrivalDateTime,
-			LocalDateTime secondLegDepartureDateTime, LocalDateTime secondLegArrivalDateTime) {
-		
-		if(firstLegDepartureDateTime.isBefore(secondLegArrivalDateTime)) {
-			if(firstLegDepartureDateTime.isAfter(requestedDepartureDateTime) && secondLegArrivalDateTime.isBefore(requestedArrivalDateTime)) {
-				long hours = ChronoUnit.HOURS.between(firstLegArrivalDateTime, secondLegDepartureDateTime);
-				if (hours >= 2) {
-					createInterconnetion(interconnections, firstLeg, secondLeg);
-				}
-			}
-		}
-	}
-
-
-	private void createInterconnetion(List<Interconnection> interconnections, Leg firstLeg, Leg secondLeg) {
+	void createInterconnetion(List<Interconnection> interconnections, Leg firstLeg, Leg secondLeg) {
 		ArrayList<Leg> legs = new ArrayList<Leg>();
 		legs.add(firstLeg);
 		legs.add(secondLeg);
 
 		Interconnection interconnectedFlight = new Interconnection();
 		interconnectedFlight.setLegs(legs);
-		interconnectedFlight.setStops("1");
+		interconnectedFlight.setStops(ONE_STOP);
 		interconnections.add(interconnectedFlight);
 	}
 
