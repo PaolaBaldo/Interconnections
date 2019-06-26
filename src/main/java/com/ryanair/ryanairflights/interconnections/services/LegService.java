@@ -48,8 +48,7 @@ public class LegService {
 			LocalTime flightArrivalTime = LocalTime.parse(flight.getArrivalTime());
 			LocalDateTime flightDepartureDateTime = createLocalDateTime(day, flightDepartureTime, requestedFlight);
 			LocalDateTime flightArrivalDateTime = createLocalDateTime(day, flightArrivalTime, requestedFlight);
-			Leg leg = new Leg(route.getAirportFrom(), route.getAirportTo(), flightDepartureDateTime.toString(),
-			flightArrivalDateTime.toString());
+			Leg leg = new Leg(route.getAirportFrom(), route.getAirportTo(), flightDepartureDateTime.toString(),flightArrivalDateTime.toString());
 			legList.add(leg);
 		}
 		return legList;

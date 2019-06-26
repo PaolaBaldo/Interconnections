@@ -5,10 +5,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.ryanair.ryanairflights.interconnections.Interconnection;
 import com.ryanair.ryanairflights.interconnections.Leg;
 
+@Service
 public class TimeBetweenLegsValidator {
 	
 	@Autowired
